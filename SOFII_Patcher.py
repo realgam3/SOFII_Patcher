@@ -63,7 +63,7 @@ class SoF2(object):
 
     def patch_logging(self):
         # Patch Logging Function
-        result = re.search(br"\xB8\x00\x10\x00\x00\xE8.{4}", self.file_content)
+        result = re.search(br"\xB8\x00\x10\x00\x00\xE8.{4}\x8B\x8C\x24.{4}", self.file_content)
         if result:
             replace_from = result.group(0)
             replace_to = replace_from.replace(b'\xB8', b'\xC3', 1)
@@ -79,6 +79,9 @@ class SoF2(object):
             f.write(self.file_content)
 
     def patch(self, save_backup=True, patch_log=True, patch_res=True, res_str=""):
+        if save_backup:
+            self.save(ext=".backup")
+
         if patch_log:
             self.patch_logging()
 
@@ -89,8 +92,6 @@ class SoF2(object):
                 kwargs = re_res.groupdict()
             self.patch_resolution(**kwargs)
 
-        if save_backup:
-            self.save(ext=".backup")
         self.save()
 
 
