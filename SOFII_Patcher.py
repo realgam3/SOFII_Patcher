@@ -63,11 +63,23 @@ class SoF2(object):
 
     def patch_logging(self):
         # Patch Logging Function
-        result = re.search(br"\xB8\x00\x10\x00\x00\xE8.{4}\x8B\x8C\x24.{4}", self.file_content)
-        if result:
-            replace_from = result.group(0)
-            replace_to = replace_from.replace(b'\xB8', b'\xC3', 1)
-            self.file_content = self.file_content.replace(replace_from, replace_to, 1)
+        results = list(re.finditer(
+            br"\xB8\x00\x10\x00\x00"
+            br"\xE8.{4}"
+            br"\x8B\x8C\x24.\x10\x00\x00"
+            br"\x8D\x84\x24.\x10\x00\x00"
+            br"\x50"
+            br"\x51"
+            br"\x8D\x54\x24\x08"
+            br"\x52"
+            br"\xE8.{4}",
+            self.file_content
+        ))
+        if results:
+            for result in results:
+                replace_from = result.group(0)
+                replace_to = replace_from.replace(b'\xB8', b'\xC3', 1)
+                self.file_content = self.file_content.replace(replace_from, replace_to, 1)
             print("Logging Function Patched")
         else:
             print("Logging Function Already Patched")
