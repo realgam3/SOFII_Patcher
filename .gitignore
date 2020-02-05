@@ -130,3 +130,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# SoF2 Test Files
+SoF2.exe
+SoF2MP.exe
