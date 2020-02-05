@@ -1,9 +1,9 @@
 import re
-import os
 import ctypes
 import struct
 from os import path
 from glob import glob
+from argparse import ArgumentParser
 from winreg import ConnectRegistry, HKEY_LOCAL_MACHINE, OpenKeyEx, QueryValueEx
 
 BUFFER_SIZE = 1024
@@ -53,7 +53,7 @@ class SoF2(object):
         replace_from = result.group(0)
         replace_to = replace_from.replace(
             result.group('width') + result.group('height'),
-            struct.pack('<I', width) + struct.pack('<I', height)
+            struct.pack('<I', int(width)) + struct.pack('<I', int(height))
         )
         self.file_content = self.file_content.replace(replace_from, replace_to, 1)
 
@@ -95,12 +95,39 @@ class SoF2(object):
 
 
 if __name__ == '__main__':
-    sof2_paths = list(map(path.abspath, glob('./SoF2*.exe')))
+    parser = ArgumentParser()
+    parser.add_argument("-r", "--resolution",
+                        help="resolution to patch (for example: 1920x1080)",
+                        default="")
+    parser.add_argument("-f", "--file",
+                        help="file to patch",
+                        nargs='+',
+                        default=[])
+    parser.add_argument("-nb", "--no-backup",
+                        help="don't save .backup file",
+                        action="store_true")
+    parser.add_argument("-nlp", "--no-log-patch",
+                        help="don't patch log function",
+                        action="store_true")
+    parser.add_argument("-nrp", "--no-resolution-patch",
+                        help="don't patch resolution",
+                        action="store_true")
+
+    args = parser.parse_args()
+
+    sof2_paths = args.file
+    if not sof2_paths:
+        sof2_paths = list(map(path.abspath, glob('./SoF2*.exe')))
     if not sof2_paths:
         sof2_paths = list(glob(path.join(get_sof2_path(), 'SoF2*.exe')))
 
     for sof2_path in sof2_paths:
-        print(path.splitext(path.basename(sof2_path))[0])
-        sof2 = SoF2()
-        sof2.patch()
+        print("%s:" % path.abspath(sof2_path))
+        sof2 = SoF2(file_path=sof2_path)
+        sof2.patch(
+            save_backup=not args.no_backup,
+            patch_log=not args.no_log_patch,
+            patch_res=not args.no_resolution_patch,
+            res_str=args.resolution
+        )
         print()
